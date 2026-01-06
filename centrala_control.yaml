@@ -1,0 +1,50 @@
+blueprint:
+  name: Heat Control Centrala
+  description: Automatically control the heater switch based on reqcentrala state.
+  domain: automation
+  input:
+    req_switch:
+      name: Request Switch (switch.reqcentrala)
+      selector:
+        entity:
+          domain: switch
+    heater_switch:
+      name: Heater Switch to Control
+      selector:
+        entity:
+          domain: switch
+
+trigger:
+  - platform: state
+    entity_id: !input req_switch
+  - platform: time_pattern
+    seconds: "/10"
+
+condition: []
+
+action:
+  - choose:
+      - conditions:
+          - condition: state
+            entity_id: !input req_switch
+            state:
+              - "off"
+              - unavailable
+              - unknown
+        sequence:
+          - service: switch.turn_off
+            target:
+              entity_id: !input heater_switch
+
+      - conditions:
+          - condition: state
+            entity_id: !input req_switch
+            state: "on"
+            for:
+              seconds: 10
+        sequence:
+          - service: switch.turn_on
+            target:
+              entity_id: !input heater_switch
+
+mode: single

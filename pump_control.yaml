@@ -1,0 +1,55 @@
+blueprint:
+  name: Heat Control Pump
+  description: Control the pump based on the request heat switch.
+  domain: automation
+  input:
+    req_heat:
+      name: Request Heat Switch (for all actuators on the floor)
+      description: The switch that signals heating demand.
+      selector:
+        entity:
+          domain: switch
+
+    pump_switch:
+      name: Pump Switch
+      description: The pump to turn on/off based on heating demand.
+      selector:
+        entity:
+          domain: switch
+
+trigger:
+  - platform: state
+    entity_id: !input req_heat
+
+  - platform: time_pattern
+    seconds: "/10"
+
+condition: []
+
+action:
+  - alias: Turn Off Pump if Req Heat is Off
+    if:
+      - condition: state
+        entity_id: !input req_heat
+        state:
+          - "off"
+          - unavailable
+          - unknown
+    then:
+      - service: switch.turn_off
+        target:
+          entity_id: !input pump_switch
+
+  - alias: Turn on Pump after 2 min Req Heat
+    if:
+      - condition: state
+        entity_id: !input req_heat
+        state: "on"
+        for:
+          minutes: 2
+    then:
+      - service: switch.turn_on
+        target:
+          entity_id: !input pump_switch
+
+mode: single
