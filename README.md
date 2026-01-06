@@ -1,0 +1,2 @@
+# Blueprints
+Hass blueprints
